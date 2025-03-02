@@ -1,0 +1,47 @@
+#define MQ9_PIN 34                    
+#define VOLTAGE_REF 3.3               
+#define ADC_RESOLUTION 4095.0         
+#define PPM_THRESHOLD 9   
+
+#define Buzzer_pin 25
+
+void setup() {
+    Serial.begin(115200); 
+    delay(5000);                    // Allow sensor to stabilize
+    Serial.println("🔥 MQ-9 Carbon Monoxide Detector Initialized...");
+
+    pinMode(MQ9_PIN, INPUT);
+    pinMode(Buzzer_pin, OUTPUT);
+    digitalWrite(Buzzer_pin,LOW);
+}
+
+void loop() {
+    int sensorValue = analogRead(MQ9_PIN);
+    float voltage = sensorValue * (VOLTAGE_REF / ADC_RESOLUTION);
+
+    // Improved PPM Calculation based on Calibration Factor
+    float coPPM = voltage * 8; 
+
+    // Prevent negative values
+    if (coPPM < 0) coPPM = 0;
+
+    // Print sensor data
+    Serial.print("Sensor Value: ");
+    Serial.print(sensorValue);
+    Serial.print(" | Voltage: ");
+    Serial.print(voltage, 2);
+    Serial.print(" V | CO Concentration: ");
+    Serial.print(coPPM);
+    Serial.println(" PPM");
+
+    // Alert if CO levels exceed threshold
+    if (coPPM > PPM_THRESHOLD) {
+        Serial.println("⚠️ WARNING: High Carbon Monoxide Level! ⚠️");
+        digitalWrite(Buzzer_pin,HIGH);
+    } else {
+        Serial.println("✅ Safe CO Levels.");
+        digitalWrite(Buzzer_pin,LOW);
+    }
+
+    delay(3000);  // Wait for 3 seconds before next reading
+}
